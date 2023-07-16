@@ -1,8 +1,17 @@
 using System.Diagnostics;
 using System.Net;
+using System.Net.Mime;
+using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Interfaces;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Services;
 using MisakaBiliApi;
+using MisakaBiliApi.Filters;
 using MisakaBiliApi.Forwarder;
+using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliApi.Services;
 using Refit;
 using Serilog;
@@ -24,13 +33,41 @@ Log.Logger = new LoggerConfiguration()
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ExceptionFilter>();
+    options.Filters.Add<ApiActionFilter>();
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo()
+    {
+        Version = "v1",
+        Title = "Misaka-L's Bili Api",
+        Description = "A simple api.",
+        Contact = new OpenApiContact()
+        {
+            Name = "Misaka-L",
+            Email = "lipww1234@foxmail.com",
+            Url = new Uri("https://misakal.xyz"),
+            Extensions = new Dictionary<string, IOpenApiExtension>()
+            {
+                { "BiliBili", new OpenApiString("https://space.bilibili.com/64514574") }
+            }
+        }
+    });
+    
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
+
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddHttpForwarder();
+
 builder.Services.AddRefitClient<IBiliApiServer>()
     .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://api.bilibili.com"));
 
@@ -40,12 +77,8 @@ var app = builder.Build();
 
 app.UseSerilogRequestLogging();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

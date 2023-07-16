@@ -23,5 +23,5 @@ public interface IBiliApiServer
     public Task<BiliApiResponse<BiliVideoDetail>> GetVideoDetailByBvid(string bvid);
     
     [Get("/x/web-interface/view")]
-    public Task<BiliApiResponse<BiliVideoDetail>> GetVideoDetailByAvid(string avid);
+    public Task<BiliApiResponse<BiliVideoDetail>> GetVideoDetailByAid(string aid);
 }
