@@ -40,5 +40,5 @@ GET /api/bilibili/video/url/redirect?bvid=BV1mx411M793&page=2 (获取 P3 的视�
 #### AV 号
 ```
 GET /api/bilibili/video/url/redirect?avid=315594987
-GET /api/bilibili/video/url/redirect?bvid=15627712&page=2 (获取 P3 的视频链接)
+GET /api/bilibili/video/url/redirect?avid=15627712&page=2 (获取 P3 的视频链接)
 ```
