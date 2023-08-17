@@ -13,7 +13,7 @@ public class BiliVideoTransformer : HttpTransformer
 
         await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
 
-        var requestUri = new Uri(httpContext.Request.Path.Value.Replace("/forward/bilibili/", "") +
+        var requestUri = new Uri("https://" + httpContext.Request.Path.Value.Replace("/forward/bilibili/", "") +
                                  httpContext.Request.QueryString);
         proxyRequest.RequestUri = requestUri;
         proxyRequest.Headers.Host = requestUri.Host;

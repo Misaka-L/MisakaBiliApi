@@ -111,7 +111,7 @@ void Configure(IApplicationBuilder app)
     {
         endpoints.Map("/forward/bilibili/{**catch-all}", async httpContext =>
         {
-            var proxyHost = new Uri(httpContext.Request.Path.Value?.Replace("/forward/bilibili/", "") ?? string.Empty)
+            var proxyHost = new Uri("https://" + httpContext.Request.Path.Value?.Replace("/forward/bilibili/", "") ?? string.Empty)
                 .Host;
             if (!(httpContext.Request.Path.HasValue & proxyHost.EndsWith("bilivideo.com")))
             {

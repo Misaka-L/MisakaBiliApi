@@ -118,7 +118,7 @@ public class BiliVideoController : Controller
         if (!ModelState.IsValid) return BadRequest();
 
         var urlData = await GetVideoUrlInternal(bvid, avid, page);
-        return Redirect($"/forward/bilibili/{urlData.Url}");
+        return Redirect($"/forward/bilibili/{urlData.Url.Replace("https://", "")}");
     }
 
     private async ValueTask<MisakaVideoUrlResponse> GetVideoUrlInternal(string bvid = "",
