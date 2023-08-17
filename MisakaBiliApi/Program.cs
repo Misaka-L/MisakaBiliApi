@@ -113,7 +113,7 @@ void Configure(IApplicationBuilder app)
         {
             var proxyHost = new Uri("https://" + httpContext.Request.Path.Value?.Replace("/forward/bilibili/", "") ?? string.Empty)
                 .Host;
-            if (!(httpContext.Request.Path.HasValue & proxyHost.EndsWith("bilivideo.com")))
+            if (!(httpContext.Request.Path.HasValue & (proxyHost.EndsWith("bilivideo.com") || proxyHost.EndsWith("akamaized.net"))))
             {
                 httpContext.Response.StatusCode = 400;
                 return;

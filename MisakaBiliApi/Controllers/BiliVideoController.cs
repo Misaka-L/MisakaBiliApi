@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliApi.Models.Bili;
 using MisakaBiliApi.Services;
@@ -12,10 +13,12 @@ namespace MisakaBiliApi.Controllers;
 public class BiliVideoController : Controller
 {
     private readonly IBiliApiServer _biliApiServer;
+    private readonly ILogger<BiliVideoController> _logger;
 
-    public BiliVideoController(IBiliApiServer biliApiServer)
+    public BiliVideoController(IBiliApiServer biliApiServer, ILogger<BiliVideoController> logger)
     {
         _biliApiServer = biliApiServer;
+        _logger = logger;
     }
 
     /// <summary>
@@ -141,11 +144,15 @@ public class BiliVideoController : Controller
         var cid = videoDetail.Pages[page].Cid;
         var urlResponse = await _biliApiServer.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080P,
             (int)BiliVideoStreamType.Mp4);
+        
+        _logger.LogInformation("BiliBili Api Response: {Response}", JsonSerializer.Serialize(urlResponse, new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        }));
 
         // NO P2P
         var urlInfo = urlResponse.Data.Durl.First();
-        var url = "";
-        url = urlInfo.Url.Contains("bilivideo.com")
+        var url = urlInfo.Url.Contains("bilivideo.com") || urlInfo.Url.Contains("akamaized.net")
             ? urlInfo.Url
             : urlInfo.BackupUrl.First(url => url.Contains("bilivideo"));
 
