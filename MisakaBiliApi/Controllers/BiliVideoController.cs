@@ -152,13 +152,8 @@ public partial class BiliVideoController : Controller
         if (page > videoDetail.Pages.Length - 1) throw new ArgumentException("Page out of index", nameof(page));
 
         var cid = videoDetail.Pages[page].Cid;
-        var urlResponse = await _biliApiServices.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080P,
+        var urlResponse = await _biliApiServices.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080PHighRate,
             (int)BiliVideoStreamType.Mp4);
-
-        _logger.LogInformation("BiliBili Api Response: {Response}", JsonSerializer.Serialize(urlResponse, new JsonSerializerOptions()
-        {
-            WriteIndented = true
-        }));
 
         // NO P2P
         var p2pRegex = P2PRegex();
