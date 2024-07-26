@@ -1,7 +1,7 @@
-﻿using MisakaBiliApi.Models.BiliApi;
+﻿using MisakaBiliCore.Models.BiliApi;
 using Refit;
 
-namespace MisakaBiliApi.Services;
+namespace MisakaBiliCore.Services;
 
 public interface IBiliApiServer
 {

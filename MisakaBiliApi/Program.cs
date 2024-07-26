@@ -5,7 +5,7 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using MisakaBiliApi.Forwarder;
-using MisakaBiliApi.Services;
+using MisakaBiliCore.Services;
 using Refit;
 using Serilog;
 using Serilog.Templates;
