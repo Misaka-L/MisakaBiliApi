@@ -1,9 +1,9 @@
 ﻿using MisakaBiliCore.Models.BiliApi;
 using Refit;
 
-namespace MisakaBiliCore.Services;
+namespace MisakaBiliCore.Services.BiliApi;
 
-public interface IBiliApiServer
+public interface IBiliApiServices
 {
     [Get("/x/player/playurl")]
     public Task<BiliApiResponse<BiliVideoUrlResponse>> GetVideoUrlByBvid(string bvid, long cid,

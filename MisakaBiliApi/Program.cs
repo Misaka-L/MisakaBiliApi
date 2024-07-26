@@ -5,7 +5,7 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using MisakaBiliApi.Forwarder;
-using MisakaBiliCore.Services;
+using MisakaBiliCore.Services.BiliApi;
 using Refit;
 using Serilog;
 using Serilog.Templates;
@@ -52,7 +52,7 @@ builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddHttpForwarder();
 
-builder.Services.AddRefitClient<IBiliApiServer>()
+builder.Services.AddRefitClient<IBiliApiServices>()
     .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://api.bilibili.com"));
 
 builder.Services.AddControllers();

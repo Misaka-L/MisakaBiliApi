@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliCore.Models.BiliApi;
-using MisakaBiliCore.Services;
+using MisakaBiliCore.Services.BiliApi;
 
 namespace MisakaBiliApi.Controllers;
 
@@ -13,12 +13,12 @@ namespace MisakaBiliApi.Controllers;
 [Route("/api/bilibili/video/")]
 public partial class BiliVideoController : Controller
 {
-    private readonly IBiliApiServer _biliApiServer;
+    private readonly IBiliApiServices _biliApiServices;
     private readonly ILogger<BiliVideoController> _logger;
 
-    public BiliVideoController(IBiliApiServer biliApiServer, ILogger<BiliVideoController> logger)
+    public BiliVideoController(IBiliApiServices biliApiServices, ILogger<BiliVideoController> logger)
     {
-        _biliApiServer = biliApiServer;
+        _biliApiServices = biliApiServices;
         _logger = logger;
     }
 
@@ -146,13 +146,13 @@ public partial class BiliVideoController : Controller
 
         BiliVideoDetail videoDetail;
         videoDetail = useBvid
-            ? (await _biliApiServer.GetVideoDetailByBvid(bvid)).Data
-            : (await _biliApiServer.GetVideoDetailByAid(avid)).Data;
+            ? (await _biliApiServices.GetVideoDetailByBvid(bvid)).Data
+            : (await _biliApiServices.GetVideoDetailByAid(avid)).Data;
 
         if (page > videoDetail.Pages.Length - 1) throw new ArgumentException("Page out of index", nameof(page));
 
         var cid = videoDetail.Pages[page].Cid;
-        var urlResponse = await _biliApiServer.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080P,
+        var urlResponse = await _biliApiServices.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080P,
             (int)BiliVideoStreamType.Mp4);
 
         _logger.LogInformation("BiliBili Api Response: {Response}", JsonSerializer.Serialize(urlResponse, new JsonSerializerOptions()
