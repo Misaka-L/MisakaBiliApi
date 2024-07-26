@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using MisakaBiliApi.Models.ApiResponse;
-using MisakaBiliApi.Models.Bili;
+using MisakaBiliApi.Models.BiliApi;
 using MisakaBiliApi.Services;
 
 namespace MisakaBiliApi.Controllers;

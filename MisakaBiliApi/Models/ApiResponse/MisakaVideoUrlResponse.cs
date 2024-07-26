@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using MisakaBiliApi.Models.Bili;
+using MisakaBiliApi.Models.BiliApi;
 
 namespace MisakaBiliApi.Models.ApiResponse;
 

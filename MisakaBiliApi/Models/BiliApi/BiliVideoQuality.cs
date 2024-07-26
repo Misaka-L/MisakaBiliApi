@@ -1,4 +1,4 @@
-﻿namespace MisakaBiliApi.Models.Bili;
+﻿namespace MisakaBiliApi.Models.BiliApi;
 
 /// <summary>
 /// 哔哩哔哩视频质量参数（qn）

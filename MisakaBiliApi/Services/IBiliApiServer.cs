@@ -1,4 +1,4 @@
-﻿using MisakaBiliApi.Models.Bili;
+﻿using MisakaBiliApi.Models.BiliApi;
 using Refit;
 
 namespace MisakaBiliApi.Services;

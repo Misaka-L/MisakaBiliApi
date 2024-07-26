@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MisakaBiliApi.Models.Bili;
+namespace MisakaBiliApi.Models.BiliApi;
 
     public record BiliVideoUrlResponse
     {
