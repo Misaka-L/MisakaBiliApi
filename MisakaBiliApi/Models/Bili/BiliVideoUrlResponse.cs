@@ -77,7 +77,7 @@ namespace MisakaBiliApi.Models.Bili;
         public string Url  { get; init; }
 
         [JsonPropertyName("backup_url")]
-        public string[] BackupUrl  { get; init; }
+        public string[]? BackupUrl  { get; init; }
     }
 
     public record BiliVideoSupportFormat

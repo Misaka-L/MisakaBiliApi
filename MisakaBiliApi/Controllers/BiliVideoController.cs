@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliApi.Models.Bili;
@@ -10,7 +11,7 @@ namespace MisakaBiliApi.Controllers;
 /// 哔哩哔哩视频 Api 控制器
 /// </summary>
 [Route("/api/bilibili/video/")]
-public class BiliVideoController : Controller
+public partial class BiliVideoController : Controller
 {
     private readonly IBiliApiServer _biliApiServer;
     private readonly ILogger<BiliVideoController> _logger;
@@ -22,25 +23,26 @@ public class BiliVideoController : Controller
     }
 
     /// <summary>
-    /// 请求哔哩哔哩视频流地址
+    /// 请求哔哩哔哩视频流地址 (MP4)
     /// </summary>
     /// <param name="bvid">BV 号</param>
     /// <param name="avid">AV 号（纯数字）</param>
     /// <param name="page">分 P（从 0 开始）</param>
-    /// <returns>返回视频流地址</returns>
+    /// <param name="redirect">是否直接重定向到视频 URL</param>
+    /// <returns>返回 MP4 视频流地址</returns>
     /// <remarks>
     /// 示例请求（BV 号）:
-    /// 
-    ///     GET /api/bilibili/video/url?bvid=BV1LP411v7Bv
-    ///     GET /api/bilibili/video/url?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频链接)
-    /// 
+    ///
+    ///     GET /api/bilibili/video/url/mp4?bvid=BV1LP411v7Bv
+    ///     GET /api/bilibili/video/url/mp4?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频链接)
+    ///
     /// 示例请求（AV 号）:
-    /// 
-    ///     GET /api/bilibili/video/url?avid=315594987
-    ///     GET /api/bilibili/video/url?bvid=15627712&amp;page=2 (获取 P3 的视频链接)
-    /// 
+    ///
+    ///     GET /api/bilibili/video/url/mp4?avid=315594987
+    ///     GET /api/bilibili/video/url/mp4?bvid=15627712&amp;page=2 (获取 P3 的视频链接)
+    ///
     /// 示例响应:
-    /// 
+    ///
     ///     {
     ///        "data": {
     ///            "url": "https://*.bilivideo.com/*",
@@ -94,18 +96,18 @@ public class BiliVideoController : Controller
     /// <returns>重定向到视频流反向代理地址</returns>
     /// <remarks>
     /// 示例请求（BV 号）:
-    /// 
-    ///     GET /api/bilibili/video/url/redirect?bvid=BV1LP411v7Bv
-    ///     GET /api/bilibili/video/url/redirect?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频链接)
-    /// 
+    ///
+    ///     GET /api/bilibili/video/url/mp4/redirect?bvid=BV1LP411v7Bv
+    ///     GET /api/bilibili/video/url/mp4/redirect?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频链接)
+    ///
     /// 示例请求（AV 号）:
-    /// 
-    ///     GET /api/bilibili/video/url/redirect?avid=315594987
-    ///     GET /api/bilibili/video/url/redirect?bvid=15627712&amp;page=2 (获取 P3 的视频链接)
+    ///
+    ///     GET /api/bilibili/video/url/mp4/redirect?avid=315594987
+    ///     GET /api/bilibili/video/url/mp4/redirect?bvid=15627712&amp;page=2 (获取 P3 的视频链接)
     /// </remarks>
     /// <response code="400">请求参数错误</response>
     /// <response code="302">重定向视频流反向代理地址</response>
-    [Route("url/redirect")]
+    [Route("url/mp4/proxy")]
     [HttpGet]
     [ProducesResponseType<MisakaVideoUrlResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status302Found)]
@@ -129,6 +131,9 @@ public class BiliVideoController : Controller
         return Redirect($"/forward/bilibili/{urlData.Url.Replace("https://", "")}");
     }
 
+    [GeneratedRegex("(mcdn.bilivideo.(cn|com)|szbdyd.com)")]
+    private static partial Regex P2PRegex();
+
     private async ValueTask<MisakaVideoUrlResponse> GetVideoUrlInternal(string bvid = "",
         string avid = "", int page = 0)
     {
@@ -149,17 +154,17 @@ public class BiliVideoController : Controller
         var cid = videoDetail.Pages[page].Cid;
         var urlResponse = await _biliApiServer.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080P,
             (int)BiliVideoStreamType.Mp4);
-        
+
         _logger.LogInformation("BiliBili Api Response: {Response}", JsonSerializer.Serialize(urlResponse, new JsonSerializerOptions()
         {
             WriteIndented = true
         }));
 
         // NO P2P
+        var p2pRegex = P2PRegex();
         var urlInfo = urlResponse.Data.Durl.First();
-        var url = urlInfo.Url.Contains("bilivideo.com") || urlInfo.Url.Contains("akamaized.net")
-            ? urlInfo.Url
-            : urlInfo.BackupUrl.First(url => url.Contains("bilivideo"));
+        string[] urls = [urlInfo.Url, ..urlInfo.BackupUrl ?? []];
+        var url = urls.First(url => !p2pRegex.IsMatch(url));
 
         return new MisakaVideoUrlResponse(url, urlResponse.Data.Format,
             urlResponse.Data.Timelength, urlResponse.Data.Quality);
