@@ -1,17 +1,10 @@
 using System.Diagnostics;
 using System.Net;
-using System.Net.Mime;
 using System.Reflection;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Services;
-using MisakaBiliApi;
-using MisakaBiliApi.Filters;
 using MisakaBiliApi.Forwarder;
-using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliApi.Services;
 using Refit;
 using Serilog;
@@ -31,15 +24,6 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Debug(new ExpressionTemplate(logTemplate))
     .CreateLogger();
 
-// Add services to the container.
-
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<ExceptionFilter>();
-    options.Filters.Add<ApiActionFilter>();
-});
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -59,7 +43,7 @@ builder.Services.AddSwaggerGen(options =>
             }
         }
     });
-    
+
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
@@ -70,6 +54,8 @@ builder.Services.AddHttpForwarder();
 
 builder.Services.AddRefitClient<IBiliApiServer>()
     .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://api.bilibili.com"));
+
+builder.Services.AddControllers();
 
 builder.Host.UseSerilog();
 

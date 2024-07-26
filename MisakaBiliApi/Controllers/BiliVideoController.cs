@@ -54,13 +54,12 @@ public class BiliVideoController : Controller
     /// </remarks>
     /// <response code="400">请求参数错误</response>
     /// <response code="200">返回视频流地址</response>
-    [Route("url")]
-    [HttpGet]
-    [ProducesResponseType(typeof(MisakaApiResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [HttpGet("url/mp4")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<MisakaVideoUrlResponse>(StatusCodes.Status200OK)]
     [Produces("application/json")]
-    public async ValueTask<ActionResult<MisakaApiResponse<MisakaVideoUrlResponse>>> GetVideoUrl(string bvid = "",
-        string avid = "", int page = 0)
+    public async ValueTask<ActionResult<MisakaVideoUrlResponse>> GetVideoUrl(string bvid = "",
+        string avid = "", int page = 0, bool redirect = false)
     {
         if (string.IsNullOrWhiteSpace(bvid) && string.IsNullOrWhiteSpace(avid))
         {
@@ -77,7 +76,13 @@ public class BiliVideoController : Controller
         if (!ModelState.IsValid) return BadRequest();
 
         var response = await GetVideoUrlInternal(bvid, avid, page);
-        return new MisakaApiResponse<MisakaVideoUrlResponse>("ok", response);
+
+        if (redirect)
+        {
+            return Redirect(response.Url);
+        }
+
+        return response;
     }
 
     /// <summary>
@@ -102,7 +107,7 @@ public class BiliVideoController : Controller
     /// <response code="302">重定向视频流反向代理地址</response>
     [Route("url/redirect")]
     [HttpGet]
-    [ProducesResponseType(typeof(MisakaApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<MisakaVideoUrlResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status302Found)]
     public async ValueTask<IActionResult> RedirectToVideoUrl(string bvid = "", string avid = "", int page = 0)
     {
