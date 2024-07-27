@@ -10,7 +10,7 @@ namespace MisakaBiliApi.Controllers;
 /// <summary>
 /// 哔哩哔哩视频 Api 控制器
 /// </summary>
-[Route("/api/bilibili/video/")]
+[Route("video")]
 public partial class BiliVideoController : Controller
 {
     private readonly IBiliApiServices _biliApiServices;
