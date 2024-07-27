@@ -3,10 +3,11 @@ WORKDIR /MisakaBiliApi
 
 COPY *.sln .
 COPY MisakaBiliApi/*.csproj ./MisakaBiliApi/
+COPY MisakaBiliCore/*.csproj ./MisakaBiliCore/
 RUN dotnet restore
 
 COPY MisakaBiliApi/. ./MisakaBiliApi/
-# WORKDIR /MisakaBiliApi/MisakaBiliApi
+COPY MisakaBiliCore/. ./MisakaBiliCore/
 RUN dotnet publish -c release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
