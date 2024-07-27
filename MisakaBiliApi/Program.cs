@@ -1,10 +1,8 @@
-using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
-using MisakaBiliApi.Forwarder;
 using MisakaBiliCore;
 using MisakaBiliCore.Services;
 using MisakaBiliCore.Services.BiliApi;
@@ -12,7 +10,6 @@ using Refit;
 using Serilog;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
-using Yarp.ReverseProxy.Forwarder;
 
 Dictionary<string, string> defaultRequestHeader = new()
 {
@@ -73,10 +70,6 @@ builder.Services.AddSwaggerGen(options =>
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
-
-builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-builder.Services.AddHttpForwarder();
 
 builder.Services.AddSingleton<BiliApiSecretStorageService>();
 builder.Services.AddSingleton<BiliPassportService>();
@@ -144,54 +137,6 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-Configure(app);
-
 app.MapControllers();
 
-app.MapReverseProxy();
-
-app.Run();
-
-void Configure(IApplicationBuilder app)
-{
-    var httpClient = new HttpMessageInvoker(new SocketsHttpHandler()
-    {
-        UseProxy = false,
-        AllowAutoRedirect = false,
-        AutomaticDecompression = DecompressionMethods.None,
-        UseCookies = false,
-        ActivityHeadersPropagator = new ReverseProxyPropagator(DistributedContextPropagator.Current),
-        ConnectTimeout = TimeSpan.FromSeconds(15),
-    });
-
-    var transformer = new BiliVideoTransformer();
-    var requestConfig = new ForwarderRequestConfig { ActivityTimeout = TimeSpan.FromSeconds(100) };
-
-    app.UseRouting();
-    app.UseAuthorization();
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.Map("/forward/bilibili/{**catch-all}", async httpContext =>
-        {
-            var proxyHost = new Uri("https://" + httpContext.Request.Path.Value?.Replace("/forward/bilibili/", "") ??
-                                    string.Empty)
-                .Host;
-            if (!(httpContext.Request.Path.HasValue &
-                  (proxyHost.EndsWith("bilivideo.com") || proxyHost.EndsWith("akamaized.net"))))
-            {
-                httpContext.Response.StatusCode = 400;
-                return;
-            }
-
-            var error = await app.ApplicationServices.GetRequiredService<IHttpForwarder>().SendAsync(httpContext,
-                "https://" + proxyHost,
-                httpClient, requestConfig, transformer);
-            // Check if the operation was successful
-            if (error != ForwarderError.None)
-            {
-                var errorFeature = httpContext.GetForwarderErrorFeature();
-                var exception = errorFeature.Exception;
-            }
-        });
-    });
-}
+await app.RunAsync();
