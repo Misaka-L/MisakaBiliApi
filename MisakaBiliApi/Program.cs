@@ -78,9 +78,12 @@ builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddHttpForwarder();
 
-builder.Services.AddRefitClient<IBiliApiServices>()
-    .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://api.bilibili.com"));
+builder.Services.AddSingleton<BiliApiSecretStorageService>();
+builder.Services.AddSingleton<BiliPassportService>();
+
 builder.Services.AddTransient<WbiRequestHandler>();
+builder.Services.AddTransient<BiliTicketRequestHandler>();
+
 builder.Services.AddHttpClient("biliapi", client =>
 {
     foreach (var (headerName, value) in defaultRequestHeader)
@@ -89,19 +92,52 @@ builder.Services.AddHttpClient("biliapi", client =>
     }
 
     client.BaseAddress = new Uri("https://api.bilibili.com");
-}).ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+}).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
 {
     AutomaticDecompression = DecompressionMethods.All,
-    CookieContainer = cookieContainer
+    CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
 });
+
+builder.Services.AddHttpClient("biliMainWeb", client =>
+{
+    foreach (var (headerName, value) in defaultRequestHeader)
+    {
+        client.DefaultRequestHeaders.Add(headerName, value);
+    }
+
+    client.BaseAddress = new Uri("https://www.bilibili.com");
+}).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
+{
+    AutomaticDecompression = DecompressionMethods.All,
+    CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+});
+
 builder.Services.AddRefitClient<IBiliApiServices>(null, httpClientName: "biliapi")
     .AddHttpMessageHandler<WbiRequestHandler>();
+
+builder.Services.AddRefitClient<IBiliPassportApiService>()
+    .ConfigureHttpClient(client =>
+    {
+        foreach (var (headerName, value) in defaultRequestHeader)
+        {
+            client.DefaultRequestHeaders.Add(headerName, value);
+        }
+
+        client.BaseAddress = new Uri("https://passport.bilibili.com");
+    }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
+    {
+        AutomaticDecompression = DecompressionMethods.All,
+        CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+    });
 
 builder.Services.AddControllers();
 
 builder.Host.UseSerilog();
 
 var app = builder.Build();
+
+await app.Services.GetRequiredService<BiliApiSecretStorageService>().LoadSecrets();
+await app.Services.GetRequiredService<BiliPassportService>().GetBiliTicketAsync();
 
 app.UseSerilogRequestLogging();
 
@@ -139,9 +175,11 @@ void Configure(IApplicationBuilder app)
     {
         endpoints.Map("/forward/bilibili/{**catch-all}", async httpContext =>
         {
-            var proxyHost = new Uri("https://" + httpContext.Request.Path.Value?.Replace("/forward/bilibili/", "") ?? string.Empty)
+            var proxyHost = new Uri("https://" + httpContext.Request.Path.Value?.Replace("/forward/bilibili/", "") ??
+                                    string.Empty)
                 .Host;
-            if (!(httpContext.Request.Path.HasValue & (proxyHost.EndsWith("bilivideo.com") || proxyHost.EndsWith("akamaized.net"))))
+            if (!(httpContext.Request.Path.HasValue &
+                  (proxyHost.EndsWith("bilivideo.com") || proxyHost.EndsWith("akamaized.net"))))
             {
                 httpContext.Response.StatusCode = 400;
                 return;
