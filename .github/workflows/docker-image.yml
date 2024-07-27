@@ -27,13 +27,13 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        # list of Docker images to use as base name for tags
         images: |
           misakalinzi/misaka-bili-api
         tags: |
           type=sha
 
     - name: Build and push Docker images
-      with: docker/build-push-action@v6.5.0
+      uses: docker/build-push-action@v6.5.0
+      with:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
