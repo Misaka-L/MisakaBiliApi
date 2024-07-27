@@ -138,5 +138,7 @@ public class BiliApiCredentialRefreshHostService(
 
         _refreshBiliTicketCancellationTokenSource.Dispose();
         _refreshCookiesCancellationTokenSource?.Dispose();
+
+        await biliApiSecretStorageService.SaveSecrets();
     }
 }

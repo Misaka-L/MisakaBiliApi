@@ -15,6 +15,11 @@ public class BiliApiSecretStorageService
 
     public async Task SaveSecrets()
     {
+        foreach (var cookie in CookieContainer.GetAllCookies().Where(cookie => cookie.Secure = false).ToArray())
+        {
+            cookie.Secure = false;
+        }
+
         var containerData =
             JsonSerializer.Serialize(new SecretStorageContainer(CookieContainer.GetAllCookies().ToArray(),
                 RefreshToken));
