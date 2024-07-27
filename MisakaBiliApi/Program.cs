@@ -78,6 +78,10 @@ builder.Services.AddTransient<WbiRequestHandler>();
 
 builder.Services.AddHostedService<BiliApiCredentialRefreshHostService>();
 
+#region HttpClient & Refit
+
+#region HttpClient
+
 builder.Services.AddHttpClient("biliapi", client =>
 {
     foreach (var (headerName, value) in defaultRequestHeader)
@@ -106,8 +110,25 @@ builder.Services.AddHttpClient("biliMainWeb", client =>
     CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
 });
 
+#endregion
+
 builder.Services.AddRefitClient<IBiliApiServices>(null, httpClientName: "biliapi")
     .AddHttpMessageHandler<WbiRequestHandler>();
+
+builder.Services.AddRefitClient<IBiliLiveApiService>()
+    .ConfigureHttpClient(client =>
+    {
+        foreach (var (headerName, value) in defaultRequestHeader)
+        {
+            client.DefaultRequestHeaders.Add(headerName, value);
+        }
+
+        client.BaseAddress = new Uri("https://api.live.bilibili.com");
+    }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
+    {
+        AutomaticDecompression = DecompressionMethods.All,
+        CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+    });
 
 builder.Services.AddRefitClient<IBiliPassportApiService>()
     .ConfigureHttpClient(client =>
@@ -123,6 +144,8 @@ builder.Services.AddRefitClient<IBiliPassportApiService>()
         AutomaticDecompression = DecompressionMethods.All,
         CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
     });
+
+#endregion
 
 builder.Services.AddControllers();
 
