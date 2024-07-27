@@ -11,10 +11,14 @@ namespace MisakaBiliCore.Services;
 
 public partial class BiliPassportService(
     IBiliPassportApiService biliPassportApiService,
+    IBiliApiServices biliApiServices,
     IHttpClientFactory httpClientFactory,
     BiliApiSecretStorageService biliApiSecretStorageService,
     ILogger<BiliPassportService> logger)
 {
+    public event EventHandler? Login;
+    public event EventHandler? Logout;
+
     [GeneratedRegex("""<div id="1-name">(([\s\S])*?)<\/div>""")]
     private static partial Regex CorrenspondRegex();
 
@@ -67,10 +71,11 @@ public partial class BiliPassportService(
         }
 
         biliApiSecretStorageService.RefreshToken = pollResponse.Data.RefreshToken;
+        await biliApiSecretStorageService.SaveSecrets();
 
         logger.LogInformation("QrCode Login success");
 
-        await biliApiSecretStorageService.SaveSecrets();
+        Login?.Invoke(this, EventArgs.Empty);
 
         return pollResponse.Data;
     }
@@ -163,5 +168,15 @@ public partial class BiliPassportService(
         logger.LogInformation("Get BiliTicket Success, It will expires at: {ExpiresAt}", expiresAt);
 
         return biliTicketResponse.Data;
+    }
+
+    public async Task<BiliNavMenuWbiImage> GetWbiKeysAsync()
+    {
+        var navMenu = await biliApiServices.GetNavMenu();
+
+        biliApiSecretStorageService.WbiImgKey = Path.GetFileNameWithoutExtension(new Uri(navMenu.Data.WbiImage.ImgUrl).AbsolutePath);
+        biliApiSecretStorageService.WbiSubKey = Path.GetFileNameWithoutExtension(new Uri(navMenu.Data.WbiImage.SubUrl).AbsolutePath);
+
+        return navMenu.Data.WbiImage;
     }
 }

@@ -82,7 +82,8 @@ builder.Services.AddSingleton<BiliApiSecretStorageService>();
 builder.Services.AddSingleton<BiliPassportService>();
 
 builder.Services.AddTransient<WbiRequestHandler>();
-builder.Services.AddTransient<BiliTicketRequestHandler>();
+
+builder.Services.AddHostedService<BiliApiCredentialRefreshHostService>();
 
 builder.Services.AddHttpClient("biliapi", client =>
 {
@@ -135,9 +136,6 @@ builder.Services.AddControllers();
 builder.Host.UseSerilog();
 
 var app = builder.Build();
-
-await app.Services.GetRequiredService<BiliApiSecretStorageService>().LoadSecrets();
-await app.Services.GetRequiredService<BiliPassportService>().GetBiliTicketAsync();
 
 app.UseSerilogRequestLogging();
 

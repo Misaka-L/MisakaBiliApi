@@ -9,6 +9,10 @@ public class BiliApiSecretStorageService
     public CookieContainer CookieContainer { get; } = new ();
     public string? RefreshToken { get; set; }
 
+
+    public string? WbiImgKey { get; set; }
+    public string? WbiSubKey { get; set; }
+
     public async Task SaveSecrets()
     {
         var containerData =

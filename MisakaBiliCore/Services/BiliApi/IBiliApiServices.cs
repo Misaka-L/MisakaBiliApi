@@ -27,4 +27,7 @@ public interface IBiliApiServices
 
     [Get("/x/space/myinfo")]
     public Task<BiliApiResponse<BiliUser>> GetLoginUserInfo();
+
+    [Get("/x/web-interface/nav")]
+    public Task<BiliApiResponse<BiliNavMenuResponse>> GetNavMenu();
 }

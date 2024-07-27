@@ -18,4 +18,7 @@ public interface IBiliPassportApiService
 
     [Post("/x/passport-login/web/cookie/refresh")]
     public Task<BiliApiResponse> ConfirmRefreshCookies([AliasAs("csrf")] string csrf, [AliasAs("refresh_csrf")] string refreshCsrf);
+
+    [Get("/x/passport-login/web/cookie/info")]
+    public Task<BiliApiResponse<BiliCookieStatusResponse>> IsCookieNeedRefresh([AliasAs("csrf")] string? csrf = null);
 }
