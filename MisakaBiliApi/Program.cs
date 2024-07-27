@@ -1,9 +1,11 @@
 using System.Net;
 using System.Reflection;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using MisakaBiliCore;
+using MisakaBiliCore.Options;
 using MisakaBiliCore.Services;
 using MisakaBiliCore.Services.BiliApi;
 using Refit;
@@ -71,6 +73,15 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
+#region Options
+
+builder.Services.AddOptions<ApiBaseUrlOptions>()
+    .Bind(builder.Configuration.GetSection("ApiBaseUrl"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+#endregion
+
 builder.Services.AddSingleton<BiliApiSecretStorageService>();
 builder.Services.AddSingleton<BiliPassportService>();
 
@@ -82,28 +93,36 @@ builder.Services.AddHostedService<BiliApiCredentialRefreshHostService>();
 
 #region HttpClient
 
-builder.Services.AddHttpClient("biliapi", client =>
+builder.Services.AddHttpClient("biliapi", (services, client) =>
 {
+    var options = services.GetRequiredService<IOptions<ApiBaseUrlOptions>>().Value;
+
     foreach (var (headerName, value) in defaultRequestHeader)
     {
         client.DefaultRequestHeaders.Add(headerName, value);
     }
 
-    client.BaseAddress = new Uri("https://api.bilibili.com");
+    client.DefaultRequestHeaders.Host = options.BiliApiHost;
+
+    client.BaseAddress = new Uri(options.BiliApiBaseUrl);
 }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
 {
     AutomaticDecompression = DecompressionMethods.All,
     CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
 });
 
-builder.Services.AddHttpClient("biliMainWeb", client =>
+builder.Services.AddHttpClient("biliMainWeb", (services, client) =>
 {
+    var options = services.GetRequiredService<IOptions<ApiBaseUrlOptions>>().Value;
+
     foreach (var (headerName, value) in defaultRequestHeader)
     {
         client.DefaultRequestHeaders.Add(headerName, value);
     }
 
-    client.BaseAddress = new Uri("https://www.bilibili.com");
+    client.DefaultRequestHeaders.Host = options.BiliWebHost;
+
+    client.BaseAddress = new Uri(options.BiliWebBaseUrl);
 }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
 {
     AutomaticDecompression = DecompressionMethods.All,
@@ -116,14 +135,18 @@ builder.Services.AddRefitClient<IBiliApiServices>(null, httpClientName: "biliapi
     .AddHttpMessageHandler<WbiRequestHandler>();
 
 builder.Services.AddRefitClient<IBiliLiveApiService>()
-    .ConfigureHttpClient(client =>
+    .ConfigureHttpClient((services, client) =>
     {
+        var options = services.GetRequiredService<IOptions<ApiBaseUrlOptions>>().Value;
+
         foreach (var (headerName, value) in defaultRequestHeader)
         {
             client.DefaultRequestHeaders.Add(headerName, value);
         }
 
-        client.BaseAddress = new Uri("https://api.live.bilibili.com");
+        client.DefaultRequestHeaders.Host = options.BiliLiveApiHost;
+
+        client.BaseAddress = new Uri(options.BiliLiveApiBaseUrl);
     }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
     {
         AutomaticDecompression = DecompressionMethods.All,
@@ -131,14 +154,18 @@ builder.Services.AddRefitClient<IBiliLiveApiService>()
     });
 
 builder.Services.AddRefitClient<IBiliPassportApiService>()
-    .ConfigureHttpClient(client =>
+    .ConfigureHttpClient((services, client) =>
     {
+        var options = services.GetRequiredService<IOptions<ApiBaseUrlOptions>>().Value;
+
         foreach (var (headerName, value) in defaultRequestHeader)
         {
             client.DefaultRequestHeaders.Add(headerName, value);
         }
 
-        client.BaseAddress = new Uri("https://passport.bilibili.com");
+        client.DefaultRequestHeaders.Host = options.BiliPassportHost;
+
+        client.BaseAddress = new Uri(options.BiliPassportBaseUrl);
     }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
     {
         AutomaticDecompression = DecompressionMethods.All,
