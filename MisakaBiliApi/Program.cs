@@ -102,8 +102,6 @@ builder.Services.AddHttpClient("biliapi", (services, client) =>
         client.DefaultRequestHeaders.Add(headerName, value);
     }
 
-    client.DefaultRequestHeaders.Host = options.BiliApiHost;
-
     client.BaseAddress = new Uri(options.BiliApiBaseUrl);
 }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
 {
@@ -119,8 +117,6 @@ builder.Services.AddHttpClient("biliMainWeb", (services, client) =>
     {
         client.DefaultRequestHeaders.Add(headerName, value);
     }
-
-    client.DefaultRequestHeaders.Host = options.BiliWebHost;
 
     client.BaseAddress = new Uri(options.BiliWebBaseUrl);
 }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
@@ -144,8 +140,6 @@ builder.Services.AddRefitClient<IBiliLiveApiService>()
             client.DefaultRequestHeaders.Add(headerName, value);
         }
 
-        client.DefaultRequestHeaders.Host = options.BiliLiveApiHost;
-
         client.BaseAddress = new Uri(options.BiliLiveApiBaseUrl);
     }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
     {
@@ -162,8 +156,6 @@ builder.Services.AddRefitClient<IBiliPassportApiService>()
         {
             client.DefaultRequestHeaders.Add(headerName, value);
         }
-
-        client.DefaultRequestHeaders.Host = options.BiliPassportHost;
 
         client.BaseAddress = new Uri(options.BiliPassportBaseUrl);
     }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
