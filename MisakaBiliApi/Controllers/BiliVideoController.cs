@@ -33,7 +33,7 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
     ///
     ///     GET /video/url/mp4?avid=315594987
     ///     GET /video/url/mp4?avid=315594987&amp;redirect=true (获取视频流 URL 并重定向)
-    ///     GET /video/url/mp4?bvid=15627712&amp;page=2 (获取 P3 的视频流 URL)
+    ///     GET /video/url/mp4?avid=15627712&amp;page=2 (获取 P3 的视频流 URL)
     ///
     /// 示例响应:
     ///
@@ -110,19 +110,19 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
     /// <param name="avid">AV 号（纯数字）</param>
     /// <param name="page">分 P（从 0 开始）</param>
     /// <param name="redirect">重定向到视频流或音频流 URL或不重定向</param>
-    /// <returns>返回或重定向到 MP4 视频流地址</returns>
+    /// <returns>返回或重定向到 DASH 视频流地址</returns>
     /// <remarks>
     /// 示例请求（BV 号）:
     ///
-    ///     GET /video/url/mp4?bvid=BV1LP411v7Bv
-    ///     GET /video/url/mp4?bvid=BV1LP411v7Bv&amp;redirect=true (获取视频流 URL 并重定向)
-    ///     GET /video/url/mp4?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频流 URL)
+    ///     GET /video/url/dash?bvid=BV1LP411v7Bv
+    ///     GET /video/url/dash?bvid=BV1LP411v7Bv&amp;redirect=2 (获取并重定向音频流 URL)
+    ///     GET /video/url/dash?bvid=BV1mx411M793&amp;page=2 (获取 P3 的 DASH 流)
     ///
     /// 示例请求（AV 号）:
     ///
-    ///     GET /video/url/mp4?avid=315594987
-    ///     GET /video/url/mp4?avid=315594987&amp;redirect=true (获取视频流 URL 并重定向)
-    ///     GET /video/url/mp4?bvid=15627712&amp;page=2 (获取 P3 的视频流 URL)
+    ///     GET /video/url/dash?avid=315594987
+    ///     GET /video/url/dash?avid=315594987&amp;redirect=2 (获取并重定向音频流 URL)
+    ///     GET /video/url/dash?avid=15627712&amp;page=2 (获取 P3 的 DASH 流)
     ///
     /// 示例响应:
     ///
