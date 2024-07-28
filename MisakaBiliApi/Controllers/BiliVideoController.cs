@@ -9,6 +9,7 @@ namespace MisakaBiliApi.Controllers;
 /// <summary>
 /// 哔哩哔哩视频 Api 控制器
 /// </summary>
+[ApiController]
 [Route("video")]
 public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerBase
 {
@@ -18,34 +19,33 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
     /// <param name="bvid">BV 号</param>
     /// <param name="avid">AV 号（纯数字）</param>
     /// <param name="page">分 P（从 0 开始）</param>
-    /// <param name="redirect">是否直接重定向到视频 URL</param>
-    /// <returns>返回 MP4 视频流地址</returns>
+    /// <param name="redirect">是否直接重定向到视频流 URL</param>
+    /// <returns>返回或重定向到 MP4 视频流地址</returns>
     /// <remarks>
     /// 示例请求（BV 号）:
     ///
-    ///     GET /api/bilibili/video/url/mp4?bvid=BV1LP411v7Bv
-    ///     GET /api/bilibili/video/url/mp4?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频链接)
+    ///     GET /video/url/mp4?bvid=BV1LP411v7Bv
+    ///     GET /video/url/mp4?bvid=BV1LP411v7Bv&amp;redirect=true (获取视频流 URL 并重定向)
+    ///     GET /video/url/mp4?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频流 URL)
     ///
     /// 示例请求（AV 号）:
     ///
-    ///     GET /api/bilibili/video/url/mp4?avid=315594987
-    ///     GET /api/bilibili/video/url/mp4?bvid=15627712&amp;page=2 (获取 P3 的视频链接)
+    ///     GET /video/url/mp4?avid=315594987
+    ///     GET /video/url/mp4?avid=315594987&amp;redirect=true (获取视频流 URL 并重定向)
+    ///     GET /video/url/mp4?bvid=15627712&amp;page=2 (获取 P3 的视频流 URL)
     ///
     /// 示例响应:
     ///
     ///     {
-    ///        "data": {
-    ///            "url": "https://*.bilivideo.com/*",
-    ///               "format": "mp4720",
-    ///               "timelength": 222000,
-    ///               "quality": 64
-    ///        },
-    ///        "message": "",
-    ///        "code": 200
+    ///        "url": "https://*.bilivideo.com/*",
+    ///        "format": "mp4720",
+    ///        "timeLength": 222000,
+    ///        "quality": 64
     ///     }
     /// </remarks>
     /// <response code="400">请求参数错误</response>
     /// <response code="200">返回视频流地址</response>
+    /// <response code="302">重定向到视频流地址</response>
     [HttpGet("url/mp4")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<MisakaVideoStreamUrlResponse>(StatusCodes.Status200OK)]

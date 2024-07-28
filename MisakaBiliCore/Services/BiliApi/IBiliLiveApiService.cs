@@ -7,7 +7,7 @@ public interface IBiliLiveApiService
 {
     [Get("/room/v1/Room/playUrl")]
     public Task<BiliApiResponse<BiliLiveUrlResponse>> GetLiveUrlByRoomId(
-        [AliasAs("cid")] string cid,
+        [AliasAs("cid")] string roomId,
         [AliasAs("platform")] string platform = "web",
         [AliasAs("quality")] int quality = (int)BiliLiveQuality.Original);
 }
