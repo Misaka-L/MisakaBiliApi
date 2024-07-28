@@ -1,9 +1,8 @@
-﻿using System.Text.Json;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliCore.Models.BiliApi;
 using MisakaBiliCore.Services.BiliApi;
+using MisakaBiliCore.Utils;
 
 namespace MisakaBiliApi.Controllers;
 
@@ -11,17 +10,8 @@ namespace MisakaBiliApi.Controllers;
 /// 哔哩哔哩视频 Api 控制器
 /// </summary>
 [Route("video")]
-public partial class BiliVideoController : Controller
+public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerBase
 {
-    private readonly IBiliApiServices _biliApiServices;
-    private readonly ILogger<BiliVideoController> _logger;
-
-    public BiliVideoController(IBiliApiServices biliApiServices, ILogger<BiliVideoController> logger)
-    {
-        _biliApiServices = biliApiServices;
-        _logger = logger;
-    }
-
     /// <summary>
     /// 请求哔哩哔哩视频流地址 (MP4)
     /// </summary>
@@ -77,21 +67,42 @@ public partial class BiliVideoController : Controller
 
         if (!ModelState.IsValid) return BadRequest();
 
-        var response = await GetVideoUrlInternal(bvid, avid, page);
+        var useBvid = !string.IsNullOrWhiteSpace(bvid);
 
-        if (redirect)
+        try
         {
-            return Redirect(response.Url);
-        }
+            var pageDetail = await GetVideoPageInternal(bvid, avid, page);
 
-        return response;
+            var urlResponse = useBvid
+                ? await biliApiServices.GetVideoUrlByBvid(bvid, pageDetail.Cid, (int)BiliVideoQuality.R1080PHighRate,
+                    (int)BiliVideoStreamType.Mp4)
+                : await biliApiServices.GetVideoUrlByAvid(avid, pageDetail.Cid, (int)BiliVideoQuality.R1080PHighRate,
+                    (int)BiliVideoStreamType.Mp4);
+
+            var urls = urlResponse.Data.Durl.SelectMany(durl => (string[]) [durl.Url, ..durl.BackupUrl ?? []])
+                .ToArray();
+            var url = NoP2PUtils.GetNoP2PUrl(urls);
+
+            if (redirect)
+            {
+                return Redirect(url);
+            }
+
+            return new MisakaVideoStreamUrlResponse(
+                Url: url,
+                Format: urlResponse.Data.Format,
+                TimeLength: urlResponse.Data.Timelength,
+                Quality: urlResponse.Data.Quality
+            );
+        }
+        catch (ArgumentException argumentException)
+        {
+            ModelState.AddModelError(argumentException.ParamName ?? "", argumentException.Message);
+            return BadRequest();
+        }
     }
 
-    [GeneratedRegex("(mcdn.bilivideo.(cn|com)|szbdyd.com)")]
-    private static partial Regex P2PRegex();
-
-    private async ValueTask<MisakaVideoStreamUrlResponse> GetVideoUrlInternal(string bvid = "",
-        string avid = "", int page = 0)
+    private async ValueTask<BiliVideoPage> GetVideoPageInternal(string? bvid = null, string? avid = null, int page = 0)
     {
         if (string.IsNullOrWhiteSpace(bvid) && string.IsNullOrWhiteSpace(avid))
             throw new ArgumentException("You need at last a bvid or avid");
@@ -100,24 +111,12 @@ public partial class BiliVideoController : Controller
 
         var useBvid = !string.IsNullOrWhiteSpace(bvid);
 
-        BiliVideoDetail videoDetail;
-        videoDetail = useBvid
-            ? (await _biliApiServices.GetVideoDetailByBvid(bvid)).Data
-            : (await _biliApiServices.GetVideoDetailByAid(avid)).Data;
+        var videoDetail = useBvid
+            ? (await biliApiServices.GetVideoDetailByBvid(bvid)).Data
+            : (await biliApiServices.GetVideoDetailByAid(avid)).Data;
 
-        if (page > videoDetail.Pages.Length - 1) throw new ArgumentException("Page out of index", nameof(page));
+        if (page > videoDetail.Pages.Length - 1) throw new ArgumentOutOfRangeException(nameof(page), "Page out of index");
 
-        var cid = videoDetail.Pages[page].Cid;
-        var urlResponse = await _biliApiServices.GetVideoUrlByBvid(videoDetail.Bvid, cid, (int)BiliVideoQuality.R1080PHighRate,
-            (int)BiliVideoStreamType.Mp4);
-
-        // NO P2P
-        var p2pRegex = P2PRegex();
-        var urlInfo = urlResponse.Data.Durl.First();
-        string[] urls = [urlInfo.Url, ..urlInfo.BackupUrl ?? []];
-        var url = urls.First(url => !p2pRegex.IsMatch(url));
-
-        return new MisakaVideoStreamUrlResponse(url, urlResponse.Data.Format,
-            urlResponse.Data.Timelength, urlResponse.Data.Quality);
+        return videoDetail.Pages[page];
     }
 }
