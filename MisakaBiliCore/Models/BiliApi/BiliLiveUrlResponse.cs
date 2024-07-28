@@ -4,9 +4,9 @@ namespace MisakaBiliCore.Models.BiliApi;
 
 public class BiliLiveUrlResponse
 {
-    [JsonPropertyName("current_quality")] public long CurrentQuality { get; set; }
+    [JsonPropertyName("current_quality")] public BiliLiveQuality CurrentQuality { get; set; }
 
-    [JsonPropertyName("accept_quality")] public string[] AcceptQuality { get; set; }
+    [JsonPropertyName("accept_quality")] public BiliLiveQuality[] AcceptQuality { get; set; }
 
     [JsonPropertyName("current_qn")] public long CurrentQn { get; set; }
 

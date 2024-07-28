@@ -58,9 +58,9 @@ public partial class BiliVideoController : Controller
     /// <response code="200">返回视频流地址</response>
     [HttpGet("url/mp4")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<MisakaVideoUrlResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MisakaVideoStreamUrlResponse>(StatusCodes.Status200OK)]
     [Produces("application/json")]
-    public async ValueTask<ActionResult<MisakaVideoUrlResponse>> GetVideoUrl(string bvid = "",
+    public async ValueTask<ActionResult<MisakaVideoStreamUrlResponse>> GetVideoUrl(string bvid = "",
         string avid = "", int page = 0, bool redirect = false)
     {
         if (string.IsNullOrWhiteSpace(bvid) && string.IsNullOrWhiteSpace(avid))
@@ -90,7 +90,7 @@ public partial class BiliVideoController : Controller
     [GeneratedRegex("(mcdn.bilivideo.(cn|com)|szbdyd.com)")]
     private static partial Regex P2PRegex();
 
-    private async ValueTask<MisakaVideoUrlResponse> GetVideoUrlInternal(string bvid = "",
+    private async ValueTask<MisakaVideoStreamUrlResponse> GetVideoUrlInternal(string bvid = "",
         string avid = "", int page = 0)
     {
         if (string.IsNullOrWhiteSpace(bvid) && string.IsNullOrWhiteSpace(avid))
@@ -117,7 +117,7 @@ public partial class BiliVideoController : Controller
         string[] urls = [urlInfo.Url, ..urlInfo.BackupUrl ?? []];
         var url = urls.First(url => !p2pRegex.IsMatch(url));
 
-        return new MisakaVideoUrlResponse(url, urlResponse.Data.Format,
+        return new MisakaVideoStreamUrlResponse(url, urlResponse.Data.Format,
             urlResponse.Data.Timelength, urlResponse.Data.Quality);
     }
 }
