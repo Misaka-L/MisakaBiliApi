@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliCore.Models;
 using MisakaBiliCore.Services.BiliApi;
@@ -10,6 +11,7 @@ namespace MisakaBiliApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("live")]
+[OutputCache(PolicyName = "LiveStreamUrlCache")]
 public class BiliLiveController(IBiliLiveApiService biliLiveApiService) : ControllerBase
 {
     /// <summary>

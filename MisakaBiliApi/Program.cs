@@ -100,7 +100,8 @@ builder.Services.AddOptions<ManagementApiKeyOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-var managementApiKeyOptions = builder.Configuration.GetSection("ManagementApiKey").Get<ManagementApiKeyOptions>() ?? new ManagementApiKeyOptions();
+var managementApiKeyOptions = builder.Configuration.GetSection("ManagementApiKey").Get<ManagementApiKeyOptions>() ??
+                              new ManagementApiKeyOptions();
 
 #endregion
 
@@ -110,10 +111,7 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("ApiKey", policy =>
-    {
-        policy.RequireClaim("ApiKey", managementApiKeyOptions.ApiKey);
-    });
+    options.AddPolicy("ApiKey", policy => { policy.RequireClaim("ApiKey", managementApiKeyOptions.ApiKey); });
 });
 
 builder.Services.AddSingleton<BiliApiSecretStorageService>();
@@ -202,6 +200,12 @@ builder.Services.AddRefitClient<IBiliPassportApiService>()
 
 builder.Services.AddControllers();
 
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("VideoStreamUrlCache", new StreamUrlResponseCachePolicy(["bvid", "avid", "page", "redirect"]));
+    options.AddPolicy("LiveStreamUrlCache", new StreamUrlResponseCachePolicy(["roomId", "redirect"]));
+});
+
 builder.Host.UseSerilog();
 
 var app = builder.Build();
@@ -212,6 +216,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+app.UseOutputCache();
 
 app.MapControllers();
 

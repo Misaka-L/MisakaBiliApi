@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using MisakaBiliApi.Models;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliCore.Models.BiliApi;
@@ -12,6 +13,7 @@ namespace MisakaBiliApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("video")]
+[OutputCache(PolicyName = "VideoStreamUrlCache")]
 public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerBase
 {
     /// <summary>
