@@ -2,8 +2,10 @@
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MisakaBiliCore.Models;
 using MisakaBiliCore.Models.BiliApi;
+using MisakaBiliCore.Options;
 using MisakaBiliCore.Services.BiliApi;
 using MisakaBiliCore.Utils;
 
@@ -14,6 +16,7 @@ public partial class BiliPassportService(
     IBiliApiServices biliApiServices,
     IHttpClientFactory httpClientFactory,
     BiliApiSecretStorageService biliApiSecretStorageService,
+    IOptions<ApiBaseUrlOptions> apiBaseUrlOptions,
     ILogger<BiliPassportService> logger)
 {
     public event EventHandler? Login;
@@ -86,8 +89,9 @@ public partial class BiliPassportService(
 
         logger.LogInformation("Start Refresh Cookies");
 
-        var correnspondPath = "https://www.bilibili.com/correspond/1/" +
-                              CorrespondPathUtils.GetCorrespondPath(DateTimeOffset.Now - TimeSpan.FromMinutes(1));
+        var correnspondPath = new Uri(apiBaseUrlOptions.Value.BiliWebBaseUrl + "/correspond/1/" +
+                                      CorrespondPathUtils.GetCorrespondPath(
+                                          DateTimeOffset.Now - TimeSpan.FromMinutes(1)));
 
         logger.LogDebug("Correspond Path: {Path}", correnspondPath);
 
@@ -136,7 +140,11 @@ public partial class BiliPassportService(
             { "hexsign", message },
             { "context[ts]", dateTime.ToUnixTimeSeconds().ToString() },
             { "key_id", "ec02" },
-            { "csrf", biliApiSecretStorageService.CookieContainer.GetAllCookies().FirstOrDefault(cookie => cookie.Name == "bili_jct")?.Value ?? "" }
+            {
+                "csrf",
+                biliApiSecretStorageService.CookieContainer.GetAllCookies()
+                    .FirstOrDefault(cookie => cookie.Name == "bili_jct")?.Value ?? ""
+            }
         }).ReadAsStringAsync();
 
         logger.LogInformation("Getting BiliTicket...");
@@ -152,11 +160,13 @@ public partial class BiliPassportService(
             DateTimeOffset.FromUnixTimeSeconds(biliTicketResponse.Data.CreatedAt) +
             TimeSpan.FromSeconds(biliTicketResponse.Data.Ttl);
 
-        biliApiSecretStorageService.CookieContainer.Add(new Cookie("bili_ticket", biliTicketResponse.Data.Ticket, "/", ".bilibili.com")
-        {
-            Expires = expiresAt.DateTime
-        });
-        biliApiSecretStorageService.CookieContainer.Add(new Cookie("bili_ticket_expires", expiresAt.ToUnixTimeSeconds().ToString(), "/",
+        biliApiSecretStorageService.CookieContainer.Add(
+            new Cookie("bili_ticket", biliTicketResponse.Data.Ticket, "/", ".bilibili.com")
+            {
+                Expires = expiresAt.DateTime
+            });
+        biliApiSecretStorageService.CookieContainer.Add(new Cookie("bili_ticket_expires",
+            expiresAt.ToUnixTimeSeconds().ToString(), "/",
             ".bilibili.com")
         {
             Expires = expiresAt.DateTime
@@ -174,8 +184,10 @@ public partial class BiliPassportService(
     {
         var navMenu = await biliApiServices.GetNavMenu();
 
-        biliApiSecretStorageService.WbiImgKey = Path.GetFileNameWithoutExtension(new Uri(navMenu.Data.WbiImage.ImgUrl).AbsolutePath);
-        biliApiSecretStorageService.WbiSubKey = Path.GetFileNameWithoutExtension(new Uri(navMenu.Data.WbiImage.SubUrl).AbsolutePath);
+        biliApiSecretStorageService.WbiImgKey =
+            Path.GetFileNameWithoutExtension(new Uri(navMenu.Data.WbiImage.ImgUrl).AbsolutePath);
+        biliApiSecretStorageService.WbiSubKey =
+            Path.GetFileNameWithoutExtension(new Uri(navMenu.Data.WbiImage.SubUrl).AbsolutePath);
 
         return navMenu.Data.WbiImage;
     }
