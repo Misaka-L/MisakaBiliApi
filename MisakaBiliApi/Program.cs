@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
+using MisakaBiliApi;
+using MisakaBiliApi.Options;
 using MisakaBiliCore;
 using MisakaBiliCore.Options;
 using MisakaBiliCore.Services;
@@ -49,6 +51,8 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Debug(new ExpressionTemplate(logTemplate))
     .CreateLogger();
 
+#region ApiDoc
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -69,9 +73,20 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 
+    options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Name = "X-Api-Key",
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
+
+#endregion
 
 #region Options
 
@@ -80,7 +95,26 @@ builder.Services.AddOptions<ApiBaseUrlOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddOptions<ManagementApiKeyOptions>()
+    .Bind(builder.Configuration.GetSection("ManagementApiKey"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+var managementApiKeyOptions = builder.Configuration.GetSection("ManagementApiKey").Get<ManagementApiKeyOptions>() ?? new ManagementApiKeyOptions();
+
 #endregion
+
+builder.Services.AddAuthentication()
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>("ApiKey",
+        options => { options.ApiKey = managementApiKeyOptions.ApiKey; });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiKey", policy =>
+    {
+        policy.RequireClaim("ApiKey", managementApiKeyOptions.ApiKey);
+    });
+});
 
 builder.Services.AddSingleton<BiliApiSecretStorageService>();
 builder.Services.AddSingleton<BiliPassportService>();

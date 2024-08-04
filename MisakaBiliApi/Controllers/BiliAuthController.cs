@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MisakaBiliCore.Models;
 using MisakaBiliCore.Models.BiliApi;
 using MisakaBiliCore.Services;
@@ -8,6 +9,7 @@ namespace MisakaBiliApi.Controllers;
 
 [ApiController]
 [Route("auth")]
+[Authorize(AuthenticationSchemes = "ApiKey", Policy = "ApiKey")]
 public class BiliAuthController(
     IBiliApiServices biliApiServices,
     BiliPassportService biliPassportService) : ControllerBase
