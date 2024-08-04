@@ -60,8 +60,8 @@ builder.Services.AddSwaggerGen(options =>
     {
         Version = "v1",
         Title = "Misaka-L's Bili Api",
-        Description = "A simple api.",
-        Contact = new OpenApiContact()
+        Description = "一个简单的哔哩哔哩 API",
+        Contact = new OpenApiContact
         {
             Name = "Misaka-L",
             Email = "lipww1234@foxmail.com",
@@ -214,6 +214,30 @@ app.UseSerilogRequestLogging();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapGet("/api-docs", () => Results.Content(
+    $$"""
+      <!doctype html>
+      <html>
+      <head>
+          <title>MisakaBiliApi Reference</title>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>
+          <script id="api-reference" data-url="/swagger/v1/swagger.json"></script>
+          <script>
+          var configuration = {}
+      
+          document.getElementById('api-reference').dataset.configuration =
+              JSON.stringify(configuration)
+          </script>
+          <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+      </body>
+      </html>
+      """,
+    "text/html"
+));
 
 app.UseHttpsRedirection();
 
