@@ -30,13 +30,11 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
     ///     GET /video/url/mp4?bvid=BV1LP411v7Bv
     ///     GET /video/url/mp4?bvid=BV1LP411v7Bv&amp;redirect=true (获取视频流 URL 并重定向)
     ///     GET /video/url/mp4?bvid=BV1mx411M793&amp;page=2 (获取 P3 的视频流 URL)
-    ///
     /// 示例请求（AV 号）:
     ///
     ///     GET /video/url/mp4?avid=315594987
     ///     GET /video/url/mp4?avid=315594987&amp;redirect=true (获取视频流 URL 并重定向)
     ///     GET /video/url/mp4?avid=15627712&amp;page=2 (获取 P3 的视频流 URL)
-    ///
     /// 示例响应:
     ///
     ///     {
@@ -119,13 +117,11 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
     ///     GET /video/url/dash?bvid=BV1LP411v7Bv
     ///     GET /video/url/dash?bvid=BV1LP411v7Bv&amp;redirect=2 (获取并重定向音频流 URL)
     ///     GET /video/url/dash?bvid=BV1mx411M793&amp;page=2 (获取 P3 的 DASH 流)
-    ///
     /// 示例请求（AV 号）:
     ///
     ///     GET /video/url/dash?avid=315594987
     ///     GET /video/url/dash?avid=315594987&amp;redirect=2 (获取并重定向音频流 URL)
     ///     GET /video/url/dash?avid=15627712&amp;page=2 (获取 P3 的 DASH 流)
-    ///
     /// 示例响应:
     ///
     ///     {

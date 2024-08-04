@@ -30,9 +30,8 @@ public class BiliLiveController(IBiliLiveApiService biliLiveApiService) : Contro
     ///
     ///     {
     ///        "url": "https://*.bilivideo.com/*",
-    ///        "quality": "4",
     ///        "streamType": 0,
-    ///        "quality": 64
+    ///        "quality": 4
     ///     }
     /// </remarks>
     /// <returns>返回或重定向到直播流地址</returns>
