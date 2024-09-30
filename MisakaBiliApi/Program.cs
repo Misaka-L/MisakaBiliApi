@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Security;
 using System.Reflection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Any;
@@ -139,7 +140,11 @@ builder.Services.AddHttpClient("biliapi", (services, client) =>
 }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
 {
     AutomaticDecompression = DecompressionMethods.All,
-    CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+    CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer,
+    SslOptions = new SslClientAuthenticationOptions
+    {
+        RemoteCertificateValidationCallback = (_, _, _, _) => true
+    }
 });
 
 builder.Services.AddHttpClient("biliMainWeb", (services, client) =>
@@ -155,7 +160,11 @@ builder.Services.AddHttpClient("biliMainWeb", (services, client) =>
 }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
 {
     AutomaticDecompression = DecompressionMethods.All,
-    CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+    CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer,
+    SslOptions = new SslClientAuthenticationOptions
+    {
+        RemoteCertificateValidationCallback = (_, _, _, _) => true
+    }
 });
 
 #endregion
@@ -177,7 +186,11 @@ builder.Services.AddRefitClient<IBiliLiveApiService>()
     }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
     {
         AutomaticDecompression = DecompressionMethods.All,
-        CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+        CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer,
+        SslOptions = new SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = (_, _, _, _) => true
+        }
     });
 
 builder.Services.AddRefitClient<IBiliPassportApiService>()
@@ -194,7 +207,11 @@ builder.Services.AddRefitClient<IBiliPassportApiService>()
     }).ConfigurePrimaryHttpMessageHandler(services => new SocketsHttpHandler
     {
         AutomaticDecompression = DecompressionMethods.All,
-        CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+        CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer,
+        SslOptions = new SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = (_, _, _, _) => true
+        }
     });
 
 #endregion
