@@ -15,14 +15,22 @@ public class BiliStreamUrlRequestService(
         "upos-sz-mirrorali.bilivideo.com",
         "upos-sz-mirroralib.bilivideo.com",
         "upos-sz-mirroralio1.bilivideo.com",
+        "upos-sz-mirrorali02.bilivideo.com",
+        "upos-sz-estgoss.bilivideo.com",
         "upos-sz-mirrorcos.bilivideo.com",
         "upos-sz-mirrorcosb.bilivideo.com",
         "upos-sz-mirrorcoso1.bilivideo.com",
+        "upos-sz-mirrorcosdisp.bilivideo.com",
         "upos-sz-mirrorhw.bilivideo.com",
+        "upos-sz-mirrorhwb.bilivideo.com",
+        "upos-sz-mirror08ct.bilivideo.com",
         "upos-sz-mirrorhwo1.bilivideo.com",
         "upos-sz-mirror08c.bilivideo.com",
         "upos-sz-mirror08h.bilivideo.com",
-        "upos-sz-mirror08ct.bilivideo.com"
+        "upos-sz-mirror08ct.bilivideo.com",
+        "upos-sz-mirrorbd.bilivideo.com",
+        "upos-sz-upcdnbda2.bilivideo.com",
+        "upos-sz-mirrorhwdisp.bilivideo.com"
     ];
 
     private const string VideoDetailCacheKey = "bili-video-detail-";
