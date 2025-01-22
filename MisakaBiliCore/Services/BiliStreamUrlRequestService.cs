@@ -228,7 +228,7 @@ public class BiliStreamUrlRequestService(
                 {
                     var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, item.Url),
                         HttpCompletionOption.ResponseHeadersRead,
-                        new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token);
+                        new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
                     response.EnsureSuccessStatusCode();
 
                     return item;
