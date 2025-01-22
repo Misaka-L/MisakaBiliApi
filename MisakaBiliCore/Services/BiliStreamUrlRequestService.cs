@@ -196,17 +196,24 @@ public class BiliStreamUrlRequestService(
 
         var sortedItems = noP2PItems.Concat(p2pItems).ToArray();
 
-        var itemsReplacedUrl = sortedItems.Select(item =>
+        var itemsReplacedUrl = sortedItems.SelectMany(item =>
             {
-                var urlBuilder = new UriBuilder(item.Url)
-                {
-                    Host = _acceptedHost[0]
-                };
+                List<T> items = [];
 
-                return item with
+                foreach (var acceptHost in _acceptedHost)
                 {
-                    Url = urlBuilder.Uri.ToString()
-                };
+                    var urlBuilder = new UriBuilder(item.Url)
+                    {
+                        Host = acceptHost
+                    };
+
+                    items.Add(item with
+                    {
+                        Url = urlBuilder.Uri.ToString()
+                    });
+                }
+
+                return items;
             })
             .ToArray();
 
