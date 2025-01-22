@@ -40,6 +40,20 @@ public record BiliVideoUrlResponseBase
     [JsonPropertyName("last_play_cid")] public long LastPlayCid { get; init; }
 }
 
+public record BiliVideoUrlItemBase
+{
+    [JsonPropertyName("url")] public string Url { get; init; }
+
+    [JsonPropertyName("base_url")]
+    public string BaseUrl
+    {
+        get => Url;
+        init => Url = value;
+    }
+
+    [JsonPropertyName("backup_url")] public string[]? BackupUrls { get; init; }
+}
+
 public record BiliVideoSupportFormat
 {
     [JsonPropertyName("quality")] public long Quality { get; init; }
@@ -64,7 +78,7 @@ public record BiliVideoMp4UrlResponse : BiliVideoUrlResponseBase
     [JsonPropertyName("durl")] public BiliVideoMp4UrlItem[] Durl { get; init; } = [];
 }
 
-public record BiliVideoMp4UrlItem
+public record BiliVideoMp4UrlItem : BiliVideoUrlItemBase
 {
     [JsonPropertyName("order")] public long Order { get; init; }
 
@@ -75,10 +89,6 @@ public record BiliVideoMp4UrlItem
     [JsonPropertyName("ahead")] public string Ahead { get; init; }
 
     [JsonPropertyName("vhead")] public string Vhead { get; init; }
-
-    [JsonPropertyName("url")] public string Url { get; init; }
-
-    [JsonPropertyName("backup_url")] public string[]? BackupUrl { get; init; }
 }
 
 #endregion
@@ -107,13 +117,9 @@ public record BiliVideoDashInfo
     [JsonPropertyName("flac")] public object Flac { get; set; }
 }
 
-public record BiliVideoDashUrlItem
+public record BiliVideoDashUrlItem : BiliVideoUrlItemBase
 {
     [JsonPropertyName("id")] public long Id { get; set; }
-
-    [JsonPropertyName("base_url")] public Uri BaseUrl { get; set; }
-
-    [JsonPropertyName("backup_url")] public Uri[]? BackupUrls { get; set; }
 
     [JsonPropertyName("bandwidth")] public long Bandwidth { get; set; }
 

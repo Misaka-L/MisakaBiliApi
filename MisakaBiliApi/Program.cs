@@ -118,6 +118,8 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddSingleton<BiliApiSecretStorageService>();
 builder.Services.AddSingleton<BiliPassportService>();
 
+builder.Services.AddTransient<BiliStreamUrlRequestService>();
+
 builder.Services.AddTransient<WbiRequestHandler>();
 
 builder.Services.AddHostedService<BiliApiCredentialRefreshHostService>();
@@ -156,6 +158,14 @@ builder.Services.AddHttpClient("biliMainWeb", (services, client) =>
 {
     AutomaticDecompression = DecompressionMethods.All,
     CookieContainer = services.GetRequiredService<BiliApiSecretStorageService>().CookieContainer
+});
+
+builder.Services.AddHttpClient<BiliStreamUrlRequestService>(client =>
+{
+    foreach (var (headerName, value) in defaultRequestHeader)
+    {
+        client.DefaultRequestHeaders.Add(headerName, value);
+    }
 });
 
 #endregion
@@ -201,11 +211,7 @@ builder.Services.AddRefitClient<IBiliPassportApiService>()
 
 builder.Services.AddControllers();
 
-builder.Services.AddOutputCache(options =>
-{
-    options.AddPolicy("VideoStreamUrlCache", new StreamUrlResponseCachePolicy(["bvid", "avid", "page", "redirect"]));
-    options.AddPolicy("LiveStreamUrlCache", new StreamUrlResponseCachePolicy(["roomId", "redirect"]));
-});
+builder.Services.AddMemoryCache();
 
 builder.Host.UseSerilog();
 
@@ -241,8 +247,6 @@ app.MapGet("/api-docs", () => Results.Content(
 ));
 
 app.UseHttpsRedirection();
-
-app.UseOutputCache();
 
 app.MapControllers();
 

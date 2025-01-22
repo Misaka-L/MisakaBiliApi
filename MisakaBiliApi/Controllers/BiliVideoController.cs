@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.OutputCaching;
 using MisakaBiliApi.Models;
 using MisakaBiliApi.Models.ApiResponse;
 using MisakaBiliCore.Models.BiliApi;
+using MisakaBiliCore.Services;
 using MisakaBiliCore.Services.BiliApi;
-using MisakaBiliCore.Utils;
 
 namespace MisakaBiliApi.Controllers;
 
@@ -14,7 +14,9 @@ namespace MisakaBiliApi.Controllers;
 [ApiController]
 [Route("video")]
 [OutputCache(PolicyName = "VideoStreamUrlCache")]
-public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerBase
+public class BiliVideoController(
+    IBiliApiServices biliApiServices,
+    BiliStreamUrlRequestService biliStreamUrlRequestService) : ControllerBase
 {
     /// <summary>
     /// 请求哔哩哔哩视频流地址 (MP4)
@@ -73,16 +75,8 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
 
         try
         {
-            var pageDetail = await GetVideoPageInternal(bvid, avid, page);
-
-            var urlResponse = useBvid
-                ? await biliApiServices.GetVideoMp4UrlByBvid(bvid, pageDetail.Cid, (int)BiliVideoQuality.R1080PHighRate)
-                : await biliApiServices.GetVideoMp4UrlByAvid(avid, pageDetail.Cid,
-                    (int)BiliVideoQuality.R1080PHighRate);
-
-            var urls = urlResponse.Data.Durl.SelectMany(durl => (string[]) [durl.Url, ..durl.BackupUrl ?? []])
-                .ToArray();
-            var url = NoP2PUtils.GetNoP2PUrl(urls);
+            var urlResponse = await biliStreamUrlRequestService.GetVideoMp4StreamUrlAsync(useBvid ? bvid : avid, page, BiliVideoQuality.R1080PHighRate);
+            var url = urlResponse.Durl[0].Url;
 
             if (redirect)
             {
@@ -91,9 +85,9 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
 
             return new MisakaVideoStreamMp4UrlResponse(
                 Url: url,
-                Format: urlResponse.Data.Format,
-                TimeLength: urlResponse.Data.Timelength,
-                Quality: urlResponse.Data.Quality
+                Format: urlResponse.Format,
+                TimeLength: urlResponse.Timelength,
+                Quality: urlResponse.Quality
             );
         }
         catch (ArgumentException argumentException)
@@ -158,21 +152,16 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
 
         try
         {
-            var pageDetail = await GetVideoPageInternal(bvid, avid, page);
+            var urlResponse = useBvid ? await biliStreamUrlRequestService.GetVideoDashStreamUrlAsync(bvid, page)
+                : await biliStreamUrlRequestService.GetVideoDashStreamUrlAsync(avid, page);
 
-            var urlResponse = useBvid
-                ? await biliApiServices.GetVideoDashUrlByBvid(bvid, pageDetail.Cid,
-                    (int)BiliVideoQuality.R1080PHighRate)
-                : await biliApiServices.GetVideoDashUrlByAvid(avid, pageDetail.Cid,
-                    (int)BiliVideoQuality.R1080PHighRate);
-
-            var videoDashs = GetDashs(urlResponse.Data.Dash.Video);
+            var videoDashs = GetDashs(urlResponse.Dash.Video);
             if (redirect == DashRequestRedirectType.Video)
             {
                 return Redirect(videoDashs[0].Urls[0]);
             }
 
-            var audioDashs = GetDashs(urlResponse.Data.Dash.Audio);
+            var audioDashs = GetDashs(urlResponse.Dash.Audio);
             if (redirect == DashRequestRedirectType.Audio)
             {
                 return Redirect(audioDashs[0].Urls[0]);
@@ -181,7 +170,7 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
             return new MisakaVideoStreamDashUrlResponse(
                 VideoDashs: videoDashs,
                 AudioDashs: audioDashs,
-                Duration: urlResponse.Data.Dash.Duration
+                Duration: urlResponse.Dash.Duration
             );
         }
         catch (ArgumentException argumentException)
@@ -196,8 +185,7 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
         return dashs.Select(dash =>
             {
                 return new MisakaVideoDashItem(
-                    Urls: NoP2PUtils.GetNoP2PUrls(
-                        [dash.BaseUrl.ToString(), ..dash.BackupUrls?.Select(url => url.ToString()) ?? []]),
+                    Urls: [dash.BaseUrl.ToString(), ..dash.BackupUrls?.Select(url => url.ToString()) ?? []],
                     FrameRate: dash.FrameRate,
                     Width: dash.Width,
                     Height: dash.Height,
@@ -208,24 +196,5 @@ public class BiliVideoController(IBiliApiServices biliApiServices) : ControllerB
             })
             .OrderByDescending(dash => dash.Bandwidth)
             .ToArray();
-    }
-
-    private async ValueTask<BiliVideoPage> GetVideoPageInternal(string? bvid = null, string? avid = null, int page = 0)
-    {
-        if (string.IsNullOrWhiteSpace(bvid) && string.IsNullOrWhiteSpace(avid))
-            throw new ArgumentException("You need at last a bvid or avid");
-        if (!string.IsNullOrWhiteSpace(bvid) && !string.IsNullOrWhiteSpace(avid))
-            throw new ArgumentException("You input avid and bvid at the sametime");
-
-        var useBvid = !string.IsNullOrWhiteSpace(bvid);
-
-        var videoDetail = useBvid
-            ? (await biliApiServices.GetVideoDetailByBvid(bvid)).Data
-            : (await biliApiServices.GetVideoDetailByAid(avid)).Data;
-
-        if (page > videoDetail.Pages.Length - 1)
-            throw new ArgumentOutOfRangeException(nameof(page), "Page out of index");
-
-        return videoDetail.Pages[page];
     }
 }
